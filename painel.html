@@ -31,7 +31,7 @@ td select{padding:7px;width:auto;max-width:155px}.scroll{overflow:auto}
 <section id="login" class="card narrow hidden"><div class="pill">Acesso restrito</div><h1 style="margin-top:12px">Bem-vindo de volta.</h1><p>Entre com seu e-mail e senha cadastrados pelo administrador.</p>
 <form id="loginForm" class="stack"><div><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div>
 <div><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required></div>
-<button id="loginButton" type="submit">Entrar no CRM</button><button id="resendEmail" type="button" class="secondary">Reenviar confirmação de e-mail</button><div id="loginStatus" class="status" role="status"></div></form></section>
+<button id="loginButton" type="submit">Entrar no CRM</button><button id="resendEmail" type="button" class="secondary">Reenviar confirmação de e-mail</button><div class="small">Se o link anterior abriu localhost:3000, solicite uma nova confirmação após autorizar o endereço do GitHub no Supabase.</div><div id="loginStatus" class="status" role="status"></div></form></section>
 <section id="workspace" class="hidden"><div id="passwordBox" class="card hidden" style="max-width:470px;margin-bottom:22px"><h2>Alterar minha senha</h2><form id="pwdForm" class="stack"><div><label>Nova senha (mínimo 10 caracteres)</label><input id="newPwd" type="password" minlength="10" autocomplete="new-password" required></div><div><label>Confirmar nova senha</label><input id="confirmPwd" type="password" minlength="10" autocomplete="new-password" required></div><button type="submit">Salvar nova senha</button><p id="pwdStatus" class="status" role="status"></p></form></div><div class="toolbar" style="justify-content:space-between;margin-bottom:22px">
 <div><h1>Central comercial</h1><p style="margin:4px 0">Leads reais do banco. Cada vendedor vê apenas os leads autorizados.</p></div><span id="roleTag" class="pill"></span></div>
 <div class="cols"><div class="card"><h2>Novo lead</h2>
@@ -62,16 +62,30 @@ let api=null,profile=null,members=[];
 const statuses=["novo","atendimento","proposta","vendido","perdido"];
 async function load() {
   if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(config.url||"") || !(config.publishableKey||"").trim()) {show("setup");return;}
-  api=createClient(config.url,config.publishableKey,{auth:{persistSession:true,autoRefreshToken:true}});
+  api=createClient(config.url,config.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   $("loginForm").addEventListener("submit",signin);$("resendEmail").addEventListener("click",resendConfirmation);
   $("logout").addEventListener("click",async()=>{await api.auth.signOut();window.location.reload();});$("showPwd").addEventListener("click",()=>show("passwordBox",$("passwordBox").classList.contains("hidden")));$("pwdForm").addEventListener("submit",changePassword);
   $("leadForm").addEventListener("submit",createLead);
   $("refresh").addEventListener("click",loadLeads);
+  const callbackParams = new URLSearchParams(window.location.search);
+  const fragmentParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const authError = callbackParams.get("error_code") || fragmentParams.get("error_code");
   const {data,error}=await api.auth.getSession();
-  if(error||!data.session){show("login");return;}
+  if(error||!data.session){show("login");if(authError){say("loginStatus",authError==="otp_expired"?"O link de confirmação expirou ou já foi utilizado. Solicite outro pelo botão abaixo.":"Não foi possível confirmar o e-mail: "+(callbackParams.get("error_description")||fragmentParams.get("error_description")||authError),true);}return;}
+  if(authError){window.history.replaceState(null,"",window.location.pathname);}
   await enter();
 }
-async function resendConfirmation(){const email=$("email").value.trim();if(!email){say("loginStatus","Informe seu e-mail primeiro.",true);return;}say("loginStatus","Solicitando confirmação...");const {error}=await api.auth.resend({type:"signup",email});say("loginStatus",error?("Não foi possível reenviar: "+error.message):"Se o envio estiver permitido, você receberá um e-mail com a confirmação.",!!error);}
+async function resendConfirmation(){
+  const email=$("email").value.trim();
+  if(!email){say("loginStatus","Informe seu e-mail primeiro.",true);return;}
+  const button=$("resendEmail");button.disabled=true;
+  say("loginStatus","Solicitando novo link...");
+  const emailRedirectTo=new URL("./painel.html",window.location.href).origin + new URL("./painel.html",window.location.href).pathname;
+  try {
+    const {error}=await api.auth.resend({type:"signup",email,options:{emailRedirectTo}});
+    say("loginStatus",error?("Não foi possível reenviar: "+error.message):"Solicitação recebida. Confira o e-mail mais recente e use o novo link; o endereço do GitHub precisa estar autorizado no Supabase.",!!error);
+  } finally {button.disabled=false;}
+}
 async function signin(event){
   event.preventDefault();
   say("loginStatus","Autenticando...");
