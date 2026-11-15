@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOJA DO IPHONE — Apple CRM V2</title>
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --panel:#ffffff;
+      --panel-2:#fbfbfd;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:#d2d2d7;
+      --blue:#0071e3;
+      --blue-soft:#e8f2ff;
+      --green:#22c55e;
+      --green-soft:#e8fff1;
+      --orange:#ff9f0a;
+      --orange-soft:#fff5e6;
+      --red:#ff3b30;
+      --red-soft:#ffeceb;
+      --wa-green:#25d366;
+      --wa-green-dark:#128c7e;
+      --wa-bg:#efeae2;
+      --wa-panel:#f0f2f5;
+      --shadow:0 10px 30px rgba(17, 24, 39, 0.08);
+      --radius:24px;
+      --sidebar:280px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:linear-gradient(180deg,#fafafc 0%, var(--bg) 35%, #eef1f5 100%);
+      color:var(--text);
+    }
+    .app{display:grid;grid-template-columns:var(--sidebar) 1fr;min-height:100vh}
+    .sidebar{
+      position:sticky;top:0;height:100vh;padding:28px 22px;
+      background:rgba(255,255,255,0.72);backdrop-filter:blur(24px);
+      border-right:1px solid rgba(210,210,215,.7)
+    }
+    .brand{display:flex;align-items:center;gap:14px;padding:10px 8px 20px;border-bottom:1px solid rgba(210,210,215,.75);margin-bottom:20px}
+    .brand-icon{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#111 0%,#3a3a3c 60%,#8e8e93 100%);color:#fff;display:grid;place-items:center;font-size:24px;box-shadow:var(--shadow)}
+    .brand h1{font-size:16px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.02em}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
+    .menu-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.14em;margin:20px 10px 10px}
+    .nav{display:grid;gap:8px}
+    .nav button{border:none;background:transparent;text-align:left;width:100%;cursor:pointer;padding:14px 16px;border-radius:18px;display:flex;align-items:center;justify-content:space-between;color:var(--text);font-size:14px;font-weight:600;transition:.2s ease}
+    .nav button .left{display:flex;align-items:center;gap:12px}
+    .nav button .icon{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:#f0f2f5;color:#3a3a3c;font-size:16px}
+    .nav button.active{background:linear-gradient(180deg,#ffffff 0%,#f2f7ff 100%);box-shadow:0 8px 24px rgba(0,113,227,.10);color:var(--blue)}
+    .nav button.active .icon{background:var(--blue-soft);color:var(--blue)}
+    .pill-small{font-size:11px;padding:5px 9px;border-radius:999px;background:#f1f1f4;color:var(--muted);font-weight:700}
+    .sidebar-footer{margin-top:24px;padding:18px;border-radius:22px;background:linear-gradient(180deg,#ffffff 0%,#f8f8fb 100%);border:1px solid rgba(210,210,215,.8);box-shadow:var(--shadow)}
+    .sidebar-footer h4{margin:0 0 6px;font-size:14px}
+    .sidebar-footer p{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.45}
+    .status{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#0a7c35}
+    .dot{width:8px;height:8px;border-radius:999px;background:var(--green)}
+    .main{padding:28px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}
+    .title-wrap h2{margin:0;font-size:34px;letter-spacing:-.04em}
+    .title-wrap p{margin:6px 0 0;color:var(--muted);font-size:14px}
+    .top-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .search{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.78);border:1px solid rgba(210,210,215,.9);border-radius:999px;padding:12px 16px;min-width:280px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+    .search input{border:none;outline:none;background:transparent;width:100%;font-size:14px;color:var(--text)}
+    .btn{border:none;cursor:pointer;padding:12px 18px;border-radius:999px;font-weight:700;font-size:14px;transition:.2s ease;display:inline-flex;align-items:center;gap:8px}
+    .btn.primary{background:var(--text);color:#fff;box-shadow:var(--shadow)}
+    .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
+    .btn.blue{background:var(--blue);color:#fff;box-shadow:0 12px 24px rgba(0,113,227,.18)}
+
+    .hero{background:linear-gradient(135deg,#ffffff 0%,#f7f8fb 42%,#ecf4ff 100%);border:1px solid rgba(210,210,215,.8);border-radius:32px;padding:28px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.2fr .9fr;gap:18px;align-items:stretch;margin-bottom:22px;overflow:hidden;position:relative}
+    .hero:after{content:"";position:absolute;right:-120px;top:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(0,113,227,.15) 0%, rgba(0,113,227,.06) 30%, transparent 70%)}
+    .hero .headline{position:relative;z-index:1}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--panel);border:1px solid rgba(210,210,215,.9);font-size:12px;font-weight:700;color:var(--muted)}
+    .hero h3{font-size:34px;line-height:1.04;letter-spacing:-.05em;margin:14px 0 10px;max-width:620px}
+    .hero p{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.6;max-width:650px}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .hero-side{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
+    .micro-card{background:rgba(255,255,255,.88);border:1px solid rgba(210,210,215,.75);border-radius:24px;padding:18px;box-shadow:0 12px 25px rgba(0,0,0,.05)}
+    .micro-card .label{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .micro-card .value{font-size:26px;font-weight:800;letter-spacing:-.04em}
+    .micro-card .hint{font-size:12px;color:var(--muted);margin-top:6px}
+
+    .grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}
+    .stat-card{background:rgba(255,255,255,.85);border:1px solid rgba(210,210,215,.8);border-radius:28px;padding:20px;box-shadow:var(--shadow)}
+    .stat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .chip{font-size:12px;font-weight:700;padding:7px 10px;border-radius:999px}
+    .chip.blue{background:var(--blue-soft);color:var(--blue)}
+    .chip.green{background:var(--green-soft);color:#12924a}
+    .chip.orange{background:var(--orange-soft);color:#c97900}
+    .chip.red{background:var(--red-soft);color:#d92f24}
+    .stat-card h4{margin:0 0 6px;font-size:14px;color:var(--muted);font-weight:600}
+    .stat-card .number{font-size:32px;font-weight:800;letter-spacing:-.05em;margin:0 0 6px}
+    .delta{font-size:13px;color:var(--muted)}
+
+    .content-grid{display:grid;grid-template-columns:1.25fr .95fr;gap:18px}
+    .panel{background:rgba(255,255,255,.86);border:1px solid rgba(210,210,215,.8);border-radius:28px;padding:22px;box-shadow:var(--shadow)}
+    .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .panel-head h3{margin:0;font-size:20px;letter-spacing:-.03em}
+    .panel-head p{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .section{display:none}
+    .section.active{display:block}
+    .list{display:grid;gap:12px}
+    .row-item{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;border-radius:20px;background:linear-gradient(180deg,#fff 0%,#fafafd 100%);border:1px solid #eaebef}
+    .row-item .title{font-weight:700;font-size:14px;margin-bottom:4px}
+    .row-item .sub{font-size:12px;color:var(--muted)}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:14px 10px;text-align:left;border-bottom:1px solid #ececf1;font-size:13px}
+    .table th{color:var(--muted);font-weight:700}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .field{display:grid;gap:8px}
+    .field.full{grid-column:1/-1}
+    .field label{font-size:12px;font-weight:700;color:var(--muted)}
+    .field input,.field select,.field textarea{border:1px solid var(--line);background:#fff;border-radius:16px;padding:13px 14px;font-size:14px;outline:none}
+    .field textarea{min-height:96px;resize:vertical}
+    .campaign-card{padding:18px;border-radius:24px;background:linear-gradient(180deg,#fff 0%,#f9fafc 100%);border:1px solid #e8e9ed;margin-bottom:14px}
+    .campaign-card h4{margin:0 0 8px;font-size:16px}
+    .campaign-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+
+    .overview-cards{display:grid;gap:12px}
+    .lead-mini{padding:16px;border-radius:22px;border:1px solid #e5e7eb;background:#fff;display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+    .lead-mini .name{font-weight:700;margin-bottom:4px}
+    .lead-mini .text{font-size:13px;color:var(--muted);line-height:1.45;max-width:440px}
+    .lead-mini .time{font-size:12px;color:var(--muted);white-space:nowrap}
+
+    /* WhatsApp style inbox */
+    .whatsapp-shell{background:#ddd;border-radius:28px;padding:0;overflow:hidden;border:1px solid rgba(210,210,215,.9);box-shadow:var(--shadow)}
+    .whatsapp-frame{display:grid;grid-template-columns:380px 1fr;min-height:720px;background:#fff}
+    .wa-left{background:#fff;border-right:1px solid #dadada;display:flex;flex-direction:column}
+    .wa-topbar{height:62px;background:var(--wa-panel);display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #d7d7d7}
+    .wa-profile{display:flex;align-items:center;gap:12px}
+    .wa-avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#444,#111);color:#fff;font-weight:800}
+    .wa-icons{display:flex;gap:16px;color:#667781;font-size:18px}
+    .wa-searchbar{padding:8px 12px;background:#fff;border-bottom:1px solid #ededed}
+    .wa-search{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--wa-panel);border-radius:10px;color:#667781}
+    .wa-search input{border:none;outline:none;background:transparent;width:100%;font-size:13px}
+    .wa-filter{padding:8px 12px;display:flex;gap:8px;border-bottom:1px solid #ededed;overflow:auto;background:#fff}
+    .wa-chip{padding:8px 12px;border-radius:999px;background:#f0f2f5;color:#54656f;font-size:12px;font-weight:700;white-space:nowrap}
+    .wa-chip.active{background:#e7fce3;color:#0b6e4f}
+    .wa-chatlist{overflow:auto;flex:1;background:#fff}
+    .wa-chatitem{display:grid;grid-template-columns:52px 1fr auto;gap:12px;padding:13px 14px;border-bottom:1px solid #f0f2f5;cursor:pointer;background:#fff}
+    .wa-chatitem.active{background:#f0f2f5}
+    .wa-chatitem:hover{background:#f7f8f9}
+    .wa-chat-avatar{width:48px;height:48px;border-radius:50%;background:#dfe5eb;display:grid;place-items:center;font-weight:800;color:#334155}
+    .wa-chat-main{min-width:0}
+    .wa-chat-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:5px}
+    .wa-chat-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .wa-chat-time{font-size:12px;color:#667781;white-space:nowrap}
+    .wa-chat-preview{font-size:13px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+    .wa-chat-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+    .wa-unread{min-width:20px;height:20px;border-radius:999px;background:var(--wa-green);color:#fff;font-size:11px;display:grid;place-items:center;padding:0 6px}
+    .wa-right{display:flex;flex-direction:column;background:var(--wa-bg)}
+    .wa-chat-header{height:62px;background:var(--wa-panel);display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #d7d7d7}
+    .wa-chat-contact{display:flex;align-items:center;gap:12px}
+    .wa-chat-contact .info strong{display:block;font-size:15px}
+    .wa-chat-contact .info span{font-size:12px;color:#667781}
+    .wa-messages{flex:1;padding:22px 28px;overflow:auto;background-image:radial-gradient(rgba(0,0,0,.02) 1px, transparent 1px);background-size:18px 18px}
+    .wa-day{text-align:center;margin:4px 0 18px}
+    .wa-day span{display:inline-block;background:rgba(255,255,255,.95);padding:7px 12px;border-radius:8px;font-size:12px;color:#667781;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+    .wa-msg{max-width:72%;margin-bottom:12px;display:flex;flex-direction:column}
+    .wa-msg.in{align-items:flex-start}
+    .wa-msg.out{align-items:flex-end;margin-left:auto}
+    .wa-bubble{padding:9px 11px 8px;border-radius:10px;position:relative;font-size:14px;line-height:1.45;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+    .wa-msg.in .wa-bubble{background:#fff;border-top-left-radius:0}
+    .wa-msg.out .wa-bubble{background:#d9fdd3;border-top-right-radius:0}
+    .wa-meta{display:flex;justify-content:flex-end;gap:6px;font-size:11px;color:#667781;margin-top:4px}
+    .wa-compose{padding:10px 16px;background:var(--wa-panel);display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;border-top:1px solid #d7d7d7}
+    .wa-compose-icon{font-size:22px;color:#54656f}
+    .wa-input{background:#fff;border-radius:10px;padding:12px 14px;border:none;outline:none;font-size:14px;width:100%}
+    .wa-tagline{display:flex;justify-content:space-between;gap:12px;padding:14px 16px;background:#fff;border-top:1px solid #ededed}
+    .wa-mini-card{flex:1;background:#f8fafb;border:1px solid #e9edef;border-radius:14px;padding:12px}
+    .wa-mini-card strong{display:block;font-size:13px;margin-bottom:4px}
+    .wa-mini-card span{font-size:12px;color:#667781}
+
+    .footer-note{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
+
+    @media (max-width: 1280px){
+      .grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .content-grid,.hero{grid-template-columns:1fr}
+      .whatsapp-frame{grid-template-columns:320px 1fr}
+    }
+    @media (max-width: 960px){
+      .app{grid-template-columns:1fr}
+      .sidebar{position:relative;height:auto}
+      .main{padding:18px}
+      .topbar{flex-direction:column;align-items:flex-start}
+      .search{min-width:100%}
+      .whatsapp-frame{grid-template-columns:1fr}
+      .wa-left{display:none}
+    }
+    @media (max-width: 640px){
+      .grid-4,.form-grid,.hero-side{grid-template-columns:1fr}
+      .hero h3{font-size:28px}
+      .title-wrap h2{font-size:28px}
+      .panel,.hero,.stat-card,.micro-card,.whatsapp-shell{border-radius:22px}
+      .wa-messages{padding:16px}
+      .wa-msg{max-width:90%}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"></div>
+        <div>
+          <h1>LOJA DO IPHONE</h1>
+          <p>Apple Sales & CRM Platform</p>
+        </div>
+      </div>
+      <div class="menu-label">Workspace</div>
+      <div class="nav" id="nav">
+        <button class="active" data-target="overview"><span class="left"><span class="icon">⌂</span>Overview</span><span class="pill-small">Live</span></button>
+        <button data-target="inbox"><span class="left"><span class="icon">✉</span>Inbox</span><span class="pill-small">14</span></button>
+        <button data-target="customers"><span class="left"><span class="icon">☺</span>Clientes</span></button>
+        <button data-target="inventory"><span class="left"><span class="icon">◉</span>Estoque Apple</span></button>
+        <button data-target="campaigns"><span class="left"><span class="icon">➜</span>Campanhas</span></button>
+        <button data-target="team"><span class="left"><span class="icon">◌</span>Equipe</span></button>
+        <button data-target="settings"><span class="left"><span class="icon">⚙</span>Configurações</span></button>
+      </div>
+      <div class="sidebar-footer">
+        <h4>WhatsApp Official Ready</h4>
+        <p>Estrutura preparada para Meta Cloud API, distribuição de leads e atendimento multiusuário.</p>
+        <div class="status"><span class="dot"></span> Ambientes prontos para integração</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title-wrap">
+          <h2>Command Center</h2>
+          <p>Demonstração visual com dados fictícios. A gestão real será feita pelo painel com login.</p>
+        </div>
+        <div class="top-actions">
+          <div class="search"><span>⌕</span><input placeholder="Buscar lead, número, modelo ou campanha" /></div>
+          <a class="btn secondary" href="./painel.html" style="text-decoration:none">Entrar no painel</a>
+          <a class="btn blue" href="./painel.html" style="text-decoration:none">+ Novo lead</a>
+        </div>
+      </div>
+
+      <section id="overview" class="section active">
+        <div class="hero">
+          <div class="headline">
+            <div class="eyebrow">Premium Apple Experience • Operação Comercial</div>
+            <h3>Venda mais iPhones com um CRM premium e atendimento no estilo WhatsApp Web.</h3>
+            <p>Controle leads, atendimento via WhatsApp, modelos mais procurados, campanhas e desempenho dos vendedores em um só lugar. Tudo com estética premium inspirada no universo Apple.</p>
+            <div class="hero-actions">
+              <button class="btn primary" onclick="activateSection('inbox')">Abrir Inbox</button>
+              <button class="btn secondary" onclick="activateSection('inventory')">Ver Estoque</button>
+            </div>
+          </div>
+          <div class="hero-side">
+            <div class="micro-card"><div class="label">Vendas do mês</div><div class="value">R$ 128,4k</div><div class="hint">+18% versus mês anterior</div></div>
+            <div class="micro-card"><div class="label">Leads ativos</div><div class="value">94</div><div class="hint">29 em atendimento agora</div></div>
+            <div class="micro-card"><div class="label">iPhone campeão</div><div class="value">15 Pro</div><div class="hint">12 pedidos em negociação</div></div>
+            <div class="micro-card"><div class="label">Tempo médio de resposta</div><div class="value">3 min</div><div class="hint">Equipe com 5 vendedores</div></div>
+          </div>
+        </div>
+
+        <div class="grid-4">
+          <div class="stat-card"><div class="stat-top"><span class="chip blue">Hoje</span><span>📈</span></div><h4>Novos leads</h4><div class="number">38</div><div class="delta">+9 desde ontem</div></div>
+          <div class="stat-card"><div class="stat-top"><span class="chip green">Conversão</span><span>✓</span></div><h4>Vendas fechadas</h4><div class="number">11</div><div class="delta">Taxa de 14,2% no mês</div></div>
+          <div class="stat-card"><div class="stat-top"><span class="chip orange">Ticket</span><span>◎</span></div><h4>Ticket médio</h4><div class="number">R$ 4,8k</div><div class="delta">iPhone + acessórios</div></div>
+          <div class="stat-card"><div class="stat-top"><span class="chip red">Alertas</span><span>⚠</span></div><h4>Fila do dia</h4><div class="number">17</div><div class="delta">Leads sem retorno imediato</div></div>
+        </div>
+
+        <div class="content-grid">
+          <div class="panel">
+            <div class="panel-head"><div><h3>Atendimentos recentes</h3><p>Leads quentes e conversas prioritárias da operação.</p></div><button class="btn secondary" onclick="activateSection('inbox')">Abrir WhatsApp</button></div>
+            <div class="overview-cards">
+              <div class="lead-mini"><div><div class="name">Camila Rocha</div><div class="text">Quer iPhone 15 branco 256GB e perguntou se a loja aceita o aparelho atual na troca.</div></div><div class="time">agora</div></div>
+              <div class="lead-mini"><div><div class="name">Ana Vitória</div><div class="text">Está pronta para fechar o iPhone 15 Pro Max se incluir película e capinha no pacote.</div></div><div class="time">8 min</div></div>
+              <div class="lead-mini"><div><div class="name">Gabriel Nunes</div><div class="text">Enviou fotos do iPhone usado e aguarda avaliação para trade-in.</div></div><div class="time">12 min</div></div>
+              <div class="lead-mini"><div><div class="name">Larissa Melo</div><div class="text">Perguntou sobre cores disponíveis do iPhone 14 e formas de pagamento.</div></div><div class="time">18 min</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h3>Mais procurados</h3><p>Demanda atual por modelos Apple</p></div></div>
+            <div class="list">
+              <div class="row-item"><div><div class="title">iPhone 15 Pro</div><div class="sub">Titânio Natural • 256GB</div></div><span class="chip blue">19 leads</span></div>
+              <div class="row-item"><div><div class="title">iPhone 14</div><div class="sub">Azul • 128GB</div></div><span class="chip green">14 leads</span></div>
+              <div class="row-item"><div><div class="title">iPhone 13</div><div class="sub">Meia-noite • 128GB</div></div><span class="chip orange">11 leads</span></div>
+              <div class="row-item"><div><div class="title">AirPods Pro</div><div class="sub">Upsell de acessórios</div></div><span class="chip red">7 leads</span></div>
+            </div>
+            <div class="panel-head" style="margin-top:22px"><div><h3>Indicadores do WhatsApp</h3><p>Visão rápida da caixa de entrada</p></div></div>
+            <div class="list">
+              <div class="row-item"><div><div class="title">Conversas não lidas</div><div class="sub">Leads aguardando resposta</div></div><span class="chip green">6</span></div>
+              <div class="row-item"><div><div class="title">Primeira resposta</div><div class="sub">Média de tempo da equipe</div></div><span class="chip blue">3 min</span></div>
+              <div class="row-item"><div><div class="title">Reativações do dia</div><div class="sub">Mensagens de retorno enviadas</div></div><span class="chip orange">12</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="inbox" class="section">
+        <div class="panel">
+          <div class="panel-head"><div><h3>Inbox WhatsApp</h3><p>Prévia ilustrativa inspirada no WhatsApp Web. Mensagens reais dependerão da API oficial.</p></div><button class="btn blue">Nova mensagem</button></div>
+          <div class="whatsapp-shell">
+            <div class="whatsapp-frame">
+              <div class="wa-left">
+                <div class="wa-topbar">
+                  <div class="wa-profile"><div class="wa-avatar"></div><div><strong style="font-size:14px">LOJA DO IPHONE</strong><div style="font-size:12px;color:#667781">Equipe Comercial</div></div></div>
+                  <div class="wa-icons"><span>◌</span><span>◎</span><span>⋯</span></div>
+                </div>
+                <div class="wa-searchbar">
+                  <div class="wa-search"><span>⌕</span><input placeholder="Pesquisar ou começar uma nova conversa" /></div>
+                </div>
+                <div class="wa-filter">
+                  <div class="wa-chip active">Todas</div>
+                  <div class="wa-chip">Não lidas</div>
+                  <div class="wa-chip">Favoritas</div>
+                  <div class="wa-chip">Grupos</div>
+                </div>
+                <div class="wa-chatlist">
+                  <div class="wa-chatitem active">
+                    <div class="wa-chat-avatar">C</div>
+                    <div class="wa-chat-main">
+                      <div class="wa-chat-top"><div class="wa-chat-name">Camila Rocha</div><div class="wa-chat-time">22:14</div></div>
+                      <div class="wa-chat-preview">✔✔ Oi, tem iPhone 15 branco 256GB?</div>
+                    </div>
+                    <div class="wa-chat-side"><div class="wa-unread">2</div></div>
+                  </div>
+                  <div class="wa-chatitem">
+                    <div class="wa-chat-avatar">A</div>
+                    <div class="wa-chat-main">
+                      <div class="wa-chat-top"><div class="wa-chat-name">Ana Vitória</div><div class="wa-chat-time">21:58</div></div>
+                      <div class="wa-chat-preview">Fecho hoje se vier com película.</div>
+                    </div>
+                    <div class="wa-chat-side"></div>
+                  </div>
+                  <div class="wa-chatitem">
+                    <div class="wa-chat-avatar">G</div>
+                    <div class="wa-chat-main">
+                      <div class="wa-chat-top"><div class="wa-chat-name">Gabriel Nunes</div><div class="wa-chat-time">21:41</div></div>
+                      <div class="wa-chat-preview">Enviei as fotos do meu aparelho na troca.</div>
+                    </div>
+                    <div class="wa-chat-side"><div class="wa-unread">1</div></div>
+                  </div>
+                  <div class="wa-chatitem">
+                    <div class="wa-chat-avatar">L</div>
+                    <div class="wa-chat-main">
+                      <div class="wa-chat-top"><div class="wa-chat-name">Larissa Melo</div><div class="wa-chat-time">20:32</div></div>
+                      <div class="wa-chat-preview">Quais cores do iPhone 14 vocês têm?</div>
+                    </div>
+                    <div class="wa-chat-side"></div>
+                  </div>
+                  <div class="wa-chatitem">
+                    <div class="wa-chat-avatar">R</div>
+                    <div class="wa-chat-main">
+                      <div class="wa-chat-top"><div class="wa-chat-name">Rafael Costa</div><div class="wa-chat-time">19:55</div></div>
+                      <div class="wa-chat-preview">Pode mandar o link de pagamento?</div>
+                    </div>
+                    <div class="wa-chat-side"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="wa-right">
+                <div class="wa-chat-header">
+                  <div class="wa-chat-contact">
+                    <div class="wa-chat-avatar">C</div>
+                    <div class="info"><strong>Camila Rocha</strong><span>online • Lead do Instagram Ads</span></div>
+                  </div>
+                  <div class="wa-icons"><span>⌕</span><span>◌</span><span>⋯</span></div>
+                </div>
+                <div class="wa-messages">
+                  <div class="wa-day"><span>HOJE</span></div>
+                  <div class="wa-msg in">
+                    <div class="wa-bubble">Oi, tudo bem? Vi o anúncio de vocês e queria saber se tem iPhone 15 branco 256GB disponível.</div>
+                    <div class="wa-meta">22:07</div>
+                  </div>
+                  <div class="wa-msg out">
+                    <div class="wa-bubble">Oi, Camila! Temos sim opções disponíveis. Você procura novo ou seminovo premium?</div>
+                    <div class="wa-meta">22:08 <span>✔✔</span></div>
+                  </div>
+                  <div class="wa-msg in">
+                    <div class="wa-bubble">Quero ver as duas opções. E vocês aceitam meu iPhone 13 na troca?</div>
+                    <div class="wa-meta">22:09</div>
+                  </div>
+                  <div class="wa-msg out">
+                    <div class="wa-bubble">Aceitamos sim. Se quiser, já posso te explicar como funciona a avaliação da troca e te mandar as opções do 15 branco.</div>
+                    <div class="wa-meta">22:10 <span>✔✔</span></div>
+                  </div>
+                  <div class="wa-msg in">
+                    <div class="wa-bubble">Perfeito. Meu 13 está bem conservado. Pode me mandar os valores?</div>
+                    <div class="wa-meta">22:12</div>
+                  </div>
+                  <div class="wa-msg out">
+                    <div class="wa-bubble">Claro. Temos uma opção nova e uma seminova premium. Também consigo montar uma condição especial se você levar película e capinha junto.</div>
+                    <div class="wa-meta">22:13 <span>✔✔</span></div>
+                  </div>
+                </div>
+                <div class="wa-tagline">
+                  <div class="wa-mini-card"><strong>Lead status</strong><span>Em atendimento • Interesse em iPhone 15 branco 256GB</span></div>
+                  <div class="wa-mini-card"><strong>Próxima ação</strong><span>Enviar tabela com opções + solicitar fotos do aparelho na troca</span></div>
+                </div>
+                <div class="wa-compose">
+                  <div class="wa-compose-icon">＋</div>
+                  <input class="wa-input" value="Digite uma mensagem" />
+                  <div class="wa-compose-icon">⌕</div>
+                  <div class="wa-compose-icon">➤</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="customers" class="section">
+        <div class="panel">
+          <div class="panel-head"><div><h3>Cadastro de clientes</h3><p>Campos adaptados para venda de iPhones e acessórios.</p></div></div>
+          <div class="content-grid" style="grid-template-columns:1.1fr .9fr">
+            <div>
+              <div class="form-grid">
+                <div class="field"><label>Nome</label><input value="Ex.: Camila Rocha" /></div>
+                <div class="field"><label>WhatsApp</label><input value="(65) 99999-9999" /></div>
+                <div class="field"><label>Modelo desejado</label><select><option>iPhone 15 Pro</option><option>iPhone 14</option><option>iPhone 13</option></select></div>
+                <div class="field"><label>Armazenamento</label><select><option>128GB</option><option>256GB</option><option>512GB</option></select></div>
+                <div class="field"><label>Cor</label><select><option>Titânio Natural</option><option>Branco</option><option>Preto</option><option>Azul</option></select></div>
+                <div class="field"><label>Orçamento</label><input value="R$ 4.500,00" /></div>
+                <div class="field"><label>Condição</label><select><option>Novo</option><option>Semi novo premium</option><option>Vitrine</option></select></div>
+                <div class="field"><label>Saúde da bateria mínima</label><select><option>100%</option><option>95%+</option><option>90%+</option></select></div>
+                <div class="field"><label>Troca usada?</label><select><option>Sim</option><option>Não</option></select></div>
+                <div class="field"><label>Acessórios de interesse</label><select><option>Capinha + película</option><option>AirPods</option><option>Apple Watch</option></select></div>
+                <div class="field full"><label>Observações</label><textarea>Lead veio pelo Instagram e quer avaliar o iPhone atual na troca.</textarea></div>
+              </div>
+              <div style="margin-top:16px;display:flex;gap:12px"><button class="btn blue">Salvar cliente</button><button class="btn secondary">Limpar</button></div>
+            </div>
+            <div class="panel" style="padding:18px;box-shadow:none;background:#f8f9fb">
+              <div class="panel-head"><div><h3>Clientes recentes</h3><p>Histórico e preferência de compra</p></div></div>
+              <table class="table">
+                <thead><tr><th>Cliente</th><th>Interesse</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>Camila Rocha</td><td>iPhone 15 • 256GB</td><td>Em atendimento</td></tr>
+                  <tr><td>Ana Vitória</td><td>15 Pro Max</td><td>Proposta</td></tr>
+                  <tr><td>Marcela Lima</td><td>14 Pro + acessórios</td><td>Fechado</td></tr>
+                  <tr><td>João Paulo</td><td>13 • troca</td><td>Novo lead</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="inventory" class="section">
+        <div class="panel">
+          <div class="panel-head"><div><h3>Estoque Apple</h3><p>Controle de aparelhos, condição, bateria e margem.</p></div><button class="btn blue">+ Cadastrar iPhone</button></div>
+          <table class="table">
+            <thead><tr><th>Modelo</th><th>Cor</th><th>GB</th><th>Bateria</th><th>Condição</th><th>Custo</th><th>Venda</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>iPhone 15 Pro</td><td>Titânio Natural</td><td>256GB</td><td>100%</td><td>Novo</td><td>R$ 6.100</td><td>R$ 7.390</td><td>Disponível</td></tr>
+              <tr><td>iPhone 14</td><td>Azul</td><td>128GB</td><td>95%</td><td>Semi novo premium</td><td>R$ 3.900</td><td>R$ 4.690</td><td>Reservado</td></tr>
+              <tr><td>iPhone 13</td><td>Meia-noite</td><td>128GB</td><td>89%</td><td>Semi novo</td><td>R$ 2.950</td><td>R$ 3.690</td><td>Disponível</td></tr>
+              <tr><td>AirPods Pro</td><td>Branco</td><td>-</td><td>-</td><td>Novo</td><td>R$ 1.050</td><td>R$ 1.490</td><td>Disponível</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="campaigns" class="section">
+        <div class="panel">
+          <div class="panel-head"><div><h3>Campanhas</h3><p>Templates para captação, reativação e ofertas de iPhones.</p></div><button class="btn blue">+ Nova campanha</button></div>
+          <div class="campaign-card"><h4>Lançamento da semana</h4><p>Mensagem para lista VIP anunciando iPhone 15 Pro e 15 Pro Max com estoque limitado, parcelamento e possibilidade de trade-in.</p></div>
+          <div class="campaign-card"><h4>Reativação de leads</h4><p>Mensagem curta para leads que perguntaram por iPhone 13 ou 14 e não responderam nas últimas 72 horas.</p></div>
+          <div class="campaign-card"><h4>Upsell pós-venda</h4><p>Campanha oferecendo película, capinha premium, AirPods e Apple Watch para clientes que fecharam recentemente.</p></div>
+        </div>
+      </section>
+
+      <section id="team" class="section">
+        <div class="panel">
+          <div class="panel-head"><div><h3>Equipe comercial</h3><p>Gestão de vendedores, atendimento e produtividade.</p></div></div>
+          <div class="list">
+            <div class="row-item"><div><div class="title">Vendedor 01</div><div class="sub">21 leads ativos • 4 vendas no mês</div></div><span class="chip blue">Online</span></div>
+            <div class="row-item"><div><div class="title">Vendedor 02</div><div class="sub">18 leads ativos • 3 vendas no mês</div></div><span class="chip green">Online</span></div>
+            <div class="row-item"><div><div class="title">Vendedor 03</div><div class="sub">16 leads ativos • 2 vendas no mês</div></div><span class="chip orange">Em atendimento</span></div>
+            <div class="row-item"><div><div class="title">Vendedor 04</div><div class="sub">23 leads ativos • 5 vendas no mês</div></div><span class="chip blue">Destaque</span></div>
+            <div class="row-item"><div><div class="title">Vendedor 05</div><div class="sub">16 leads ativos • 1 venda no mês</div></div><span class="chip red">Fila alta</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings" class="section">
+        <div class="panel">
+          <div class="panel-head"><div><h3>Configurações</h3><p>Base para integração real do projeto.</p></div></div>
+          <div class="list">
+            <div class="row-item"><div><div class="title">Meta Cloud API</div><div class="sub">Número, token, webhook e templates</div></div><span class="pill-small">Pendente</span></div>
+            <div class="row-item"><div><div class="title">Supabase</div><div class="sub">Banco, autenticação, perfis e permissões</div></div><span class="pill-small">Próximo passo</span></div>
+            <div class="row-item"><div><div class="title">Distribuição de leads</div><div class="sub">Round robin, manual ou por vendedor</div></div><span class="pill-small">Configurável</span></div>
+            <div class="row-item"><div><div class="title">Etiquetas e status</div><div class="sub">Personalizar etapas e status da operação</div></div><span class="pill-small">Ativo</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer-note">Versão demonstrativa • Apple-inspired • Inbox inspirado no WhatsApp Web • HTML local sem dependências externas</div>
+    </main>
+  </div>
+
+  <script>
+    const navButtons = document.querySelectorAll('#nav button');
+    const sections = document.querySelectorAll('.section');
+    function activateSection(target){
+      navButtons.forEach(b => b.classList.toggle('active', b.getAttribute('data-target') === target));
+      sections.forEach(section => section.classList.toggle('active', section.id === target));
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => activateSection(btn.getAttribute('data-target')));
+    });
+    window.activateSection = activateSection;
+  </script>
+</body>
+</html>
