@@ -1,33 +1,48 @@
-# LOJA DO IPHONE — Etapa 2 (Supabase e login)
+# LOJA DO IPHONE — Supabase integrado (15/11/2026)
 
-Arquivos adicionados:
-- `painel.html`: nova tela operacional, com login real, CRUD inicial de leads e gestão de acessos.
-- `config.js`: URL e chave PUBLICÁVEL do projeto Supabase, ainda vazias.
-- `supabase/schema.sql`: estrutura inicial do banco, com RLS e separação admin/vendedor.
+## Situação
+- Hospedagem: GitHub Pages, https://danielvitordelgado-spec.github.io/lojadoiphone/
+- Painel operacional: https://danielvitordelgado-spec.github.io/lojadoiphone/painel.html
+- Supabase: projeto existente da organização Daniel Delgado, ref `wqstuzagsqpbgwydnoek`.
+- As tabelas de operações anteriores foram PRESERVADAS. Este CRM usa EXCLUSIVAMENTE tabelas prefixadas `iphone_` e suas próprias políticas RLS.
+- `config.js` contém somente URL e chave **publishable**, que pode ser lida pelo navegador. NUNCA adicionar secrets, service_role ou tokens da Meta.
+- Migração já aplicada: `supabase/schema.sql`.
+- Um membro administrador da LOJA DO IPHONE foi ativado usando conta já existente do Supabase Auth.
+- Não foram criadas contas dos cinco vendedores, pois faltam seus respectivos e-mails.
 
-## Antes de ativar
+## Atenção: confirmar e-mail do administrador
+A conta existente de administrador ainda não tem `email_confirmed_at` preenchido. O painel possui o botão **Reenviar confirmação de e-mail**. Informe o e-mail correspondente, clique e confirme pela caixa de entrada. A disponibilidade do envio depende da configuração de e-mails do Supabase.
 
-1. Escolher a organização Supabase e criar um projeto exclusivo para a LOJA DO IPHONE, preferencialmente em São Paulo (`sa-east-1`).
-2. Confirmar custos/limites do plano antes de criar o projeto.
-3. Rodar `supabase/schema.sql` **somente no projeto novo** pelo SQL Editor, ou por ferramenta de migração após revisão.
-4. Configurar Authentication > URL Configuration com Site URL `https://danielvitordelgado-spec.github.io/lojadoiphone/painel.html`.
-5. Desativar cadastro público de usuários; criar o primeiro admin e vendedores em Authentication > Users (Add user / Create new user). Definir senha temporária por canal seguro: cada pessoa poderá alterá-la dentro do painel. Não compartilhar senhas aqui na conversa.
-6. Depois que o primeiro admin existir, ativá-lo com SQL Editor:
-   `UPDATE public.profiles SET role='admin', active=true WHERE id=(SELECT id FROM auth.users WHERE email='EMAIL_DO_ADMIN');`
-7. Entrar com o admin no `painel.html` e ativar as contas dos vendedores na tela Equipe. Os usuários convidados entram inicialmente como inativos.
-8. Em Project Settings > API Keys, copiar apenas a **publishable key** (ou chave `anon` se necessário) para `config.js`. Copiar também a Project URL.
-9. Nunca publicar `service_role`, secrets, tokens do WhatsApp ou senha de banco no GitHub, no `config.js` ou no HTML.
-10. Testar com duas contas reais: o admin vê todos os leads, e vendedor vê somente os atribuídos a ele. Executar os Security Advisors do Supabase antes de colocar dados reais.
+## Tabelas
+- `public.iphone_team_members`: permite que apenas usuários expressamente autorizados participem deste CRM; papéis admin/seller
+- `public.iphone_leads`: dados dos clientes e propriedade de cada lead
+- `public.iphone_conversations`, `public.iphone_messages`: base para futura integração oficial do WhatsApp
+- `public.iphone_campaigns`: campanhas e templates (ainda SEM disparo real)
+- funções auxiliares de segurança no schema privado `iphone_private`
 
-## Atenção
+## Como adicionar vendedor
+1. Em Supabase > Authentication > Users, cadastre/convidar a pessoa (sem postar senha em GitHub).
+2. Faça o e-mail ser verificado.
+3. No SQL Editor deste projeto, executar SQL com e-mail literal, substituindo o texto abaixo pela identidade real:
+   ```sql
+   insert into public.iphone_team_members(user_id,display_name,role,active)
+   select id,'Nome do vendedor','seller',true
+   from auth.users where lower(email)=lower('VENDEDOR@EXEMPLO.COM')
+   on conflict (user_id) do update set
+     display_name=excluded.display_name, role='seller', active=true;
+   ```
+4. O administrador pode ativar/desativar membros já cadastrados pela tela Equipe, mas não cria novas contas Auth por ali.
 
-- O `index.html` (demonstração) permanece no ar e não foi alterado nesta etapa.
-- O `painel.html` é uma base funcional **a ser conectada** ao novo Supabase. Sem `config.js` preenchido e SQL instalado, não faz login.
-- WhatsApp Cloud API ainda não está conectado. Nunca envie mensagens diretamente do navegador com tokens privados.
-- O módulo de campanhas do demo não dispara mensagens.
-- O GitHub Pages é público: controles de acesso exigem Auth + RLS no Supabase.
-- O backend do WhatsApp será criado separadamente com webhook autenticado, filas, templates aprovados e controle de consentimento.
+## Segurança
+- Sem acesso anônimo à tabela de leads
+- Vendedor vê somente leads atribuídos a ele, administrador vê todos
+- Nenhum endpoint de envio real de WhatsApp implementado
+- Projeto Supabase é compartilhado com outro CRM, então é necessário não alterar Auth globais, site URL ou tabelas comerciais existentes indiscriminadamente
+- Foi verificado que 82 leads de outro sistema permaneceram intocados após a migração
+- Security Advisor sinalizou o aviso **Leaked Password Protection Disabled**. Ver documentação do Supabase e disponibilidade por plano.
 
-## Link da página operacional
-
-https://danielvitordelgado-spec.github.io/lojadoiphone/painel.html
+## Próximas etapas
+- Confirmar login real com conta autorizada e e-mail verificado
+- Convidar cinco vendedores; validar RLS para dois perfis reais
+- Criar Inbox real + webhook Edge Function da Meta Cloud API e gestão segura de modelos de mensagem/consentimento
+- Criar testes de autorização e backups apropriados antes de uso com dados reais
