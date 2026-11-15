@@ -26,13 +26,13 @@ td select{padding:7px;width:auto;max-width:155px}.scroll{overflow:auto}
 </style></head>
 <body><main>
 <header><div class="logo"><span class="mark"></span><div><b>LOJA DO IPHONE</b><div class="small">CRM • Área de trabalho</div></div></div>
-<div class="toolbar"><span id="who" class="small"></span><button id="logout" class="secondary hidden">Sair</button><a href="index.html" class="small">Ver demonstração</a></div></header>
+<div class="toolbar"><span id="who" class="small"></span><button id="showPwd" class="secondary hidden">Alterar senha</button><button id="logout" class="secondary hidden">Sair</button><a href="index.html" class="small">Ver demonstração</a></div></header>
 <section id="setup" class="card narrow hidden"><h1>Conexão pendente</h1><p>O sistema de login já está preparado, mas falta informar a URL e a chave pública do projeto Supabase exclusivo da LOJA DO IPHONE no arquivo <b>config.js</b>.</p><p>Não coloque senhas, tokens do WhatsApp ou a chave service_role no GitHub.</p></section>
 <section id="login" class="card narrow hidden"><div class="pill">Acesso restrito</div><h1 style="margin-top:12px">Bem-vindo de volta.</h1><p>Entre com seu e-mail e senha cadastrados pelo administrador.</p>
 <form id="loginForm" class="stack"><div><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div>
 <div><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required></div>
 <button id="loginButton" type="submit">Entrar no CRM</button><div id="loginStatus" class="status" role="status"></div></form></section>
-<section id="workspace" class="hidden"><div class="toolbar" style="justify-content:space-between;margin-bottom:22px">
+<section id="workspace" class="hidden"><div id="passwordBox" class="card hidden" style="max-width:470px;margin-bottom:22px"><h2>Alterar minha senha</h2><form id="pwdForm" class="stack"><div><label>Nova senha (mínimo 10 caracteres)</label><input id="newPwd" type="password" minlength="10" autocomplete="new-password" required></div><div><label>Confirmar nova senha</label><input id="confirmPwd" type="password" minlength="10" autocomplete="new-password" required></div><button type="submit">Salvar nova senha</button><p id="pwdStatus" class="status" role="status"></p></form></div><div class="toolbar" style="justify-content:space-between;margin-bottom:22px">
 <div><h1>Central comercial</h1><p style="margin:4px 0">Leads reais do banco. Cada vendedor vê apenas os leads autorizados.</p></div><span id="roleTag" class="pill"></span></div>
 <div class="cols"><div class="card"><h2>Novo lead</h2>
 <form id="leadForm" class="stack">
@@ -64,7 +64,7 @@ async function load() {
   if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(config.url||"") || !(config.publishableKey||"").trim()) {show("setup");return;}
   api=createClient(config.url,config.publishableKey,{auth:{persistSession:true,autoRefreshToken:true}});
   $("loginForm").addEventListener("submit",signin);
-  $("logout").addEventListener("click",async()=>{await api.auth.signOut();window.location.reload();});
+  $("logout").addEventListener("click",async()=>{await api.auth.signOut();window.location.reload();});$("showPwd").addEventListener("click",()=>show("passwordBox",$("passwordBox").classList.contains("hidden")));$("pwdForm").addEventListener("submit",changePassword);
   $("leadForm").addEventListener("submit",createLead);
   $("refresh").addEventListener("click",loadLeads);
   const {data,error}=await api.auth.getSession();
@@ -88,7 +88,7 @@ async function enter(){
     await api.auth.signOut();show("login");say("loginStatus","Acesso não liberado. Solicite a ativação do seu usuário ao administrador.",true);return;
   }
   profile=p;
-  show("login",false);show("workspace");show("logout");
+  show("login",false);show("workspace");show("logout");show("showPwd");
   $("who").textContent=p.full_name||user.email;
   $("roleTag").textContent=p.role==="admin"?"Administrador":"Vendedor";
   show("teamSection",p.role==="admin");
@@ -143,7 +143,7 @@ async function loadLeads(){
     cell.append(sel);tr.append(cell);body.append(tr);
   });
 }
-async function createLead(event){
+async function changePassword(event){event.preventDefault();const a=$("newPwd").value,b=$("confirmPwd").value;if(a!==b){say("pwdStatus","As senhas não coincidem.",true);return;}say("pwdStatus","Salvando...");const {error}=await api.auth.updateUser({password:a});if(error){say("pwdStatus",error.message,true);return;}$("pwdForm").reset();say("pwdStatus","Senha atualizada.");}\nasync function createLead(event){
   event.preventDefault();const button=$("saveLead");button.disabled=true;say("leadStatus","Salvando...");
   const {data:{user}}=await api.auth.getUser();
   const value=$("leadBudget").value;
