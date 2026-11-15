@@ -143,7 +143,8 @@ async function loadLeads(){
     cell.append(sel);tr.append(cell);body.append(tr);
   });
 }
-async function changePassword(event){event.preventDefault();const a=$("newPwd").value,b=$("confirmPwd").value;if(a!==b){say("pwdStatus","As senhas não coincidem.",true);return;}say("pwdStatus","Salvando...");const {error}=await api.auth.updateUser({password:a});if(error){say("pwdStatus",error.message,true);return;}$("pwdForm").reset();say("pwdStatus","Senha atualizada.");}\nasync function createLead(event){
+async function changePassword(event){event.preventDefault();const a=$("newPwd").value,b=$("confirmPwd").value;if(a!==b){say("pwdStatus","As senhas não coincidem.",true);return;}say("pwdStatus","Salvando...");const {error}=await api.auth.updateUser({password:a});if(error){say("pwdStatus",error.message,true);return;}$("pwdForm").reset();say("pwdStatus","Senha atualizada.");}
+async function createLead(event){
   event.preventDefault();const button=$("saveLead");button.disabled=true;say("leadStatus","Salvando...");
   const {data:{user}}=await api.auth.getUser();
   const value=$("leadBudget").value;
