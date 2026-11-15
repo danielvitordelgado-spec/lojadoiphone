@@ -83,13 +83,13 @@ async function signin(event){
 async function enter(){
   const {data:{user},error:authErr}=await api.auth.getUser();
   if(authErr||!user){show("login");say("loginStatus","Sessão inválida. Entre novamente.",true);return;}
-  const {data:p,error:pErr}=await api.from("profiles").select("id,full_name,role,active").eq("id",user.id).maybeSingle();
+  const {data:p,error:pErr}=await api.from("iphone_team_members").select("user_id,display_name,role,active").eq("user_id",user.id).maybeSingle();
   if(pErr||!p||!p.active){
     await api.auth.signOut();show("login");say("loginStatus","Acesso não liberado. Solicite a ativação do seu usuário ao administrador.",true);return;
   }
-  profile=p;
+  profile={id:p.user_id,full_name:p.display_name,role:p.role,active:p.active};
   show("login",false);show("workspace");show("logout");show("showPwd");
-  $("who").textContent=p.full_name||user.email;
+  $("who").textContent=p.display_name||user.email;
   $("roleTag").textContent=p.role==="admin"?"Administrador":"Vendedor";
   show("teamSection",p.role==="admin");
   await loadMembers();await loadLeads();
@@ -97,8 +97,8 @@ async function enter(){
 async function loadMembers(){
   members=[];
   if(profile.role==="admin"){
-    const {data,error}=await api.from("profiles").select("id,full_name,role,active").order("created_at",{ascending:true});
-    if(error){say("teamStatus",error.message,true);} else {members=data||[];renderTeam();}
+    const {data,error}=await api.from("iphone_team_members").select("user_id,display_name,role,active").order("created_at",{ascending:true});
+    if(error){say("teamStatus",error.message,true);} else {members=(data||[]).map(m=>({id:m.user_id,full_name:m.display_name,role:m.role,active:m.active}));renderTeam();}
   } else {members=[profile];}
   const owner=$("leadOwner");owner.replaceChildren();
   members.filter(m=>m.active).forEach(m=>{let o=el("option",m.full_name||m.id);o.value=m.id;owner.append(o);});
@@ -115,7 +115,7 @@ function renderTeam(){
     btn.className="secondary";btn.disabled=m.id===profile.id;
     btn.addEventListener("click",async()=>{
       btn.disabled=true;say("teamStatus","Salvando...");
-      const {error}=await api.from("profiles").update({active:!m.active}).eq("id",m.id);
+      const {error}=await api.from("iphone_team_members").update({active:!m.active}).eq("user_id",m.id);
       if(error){say("teamStatus",error.message,true);btn.disabled=false;return;}
       say("teamStatus","Acesso atualizado.");await loadMembers();
     });
@@ -124,7 +124,7 @@ function renderTeam(){
 }
 async function loadLeads(){
   say("leadCount","Carregando...");
-  const {data,error}=await api.from("leads").select("id,full_name,phone,model_interest,status,assigned_to,created_at").order("created_at",{ascending:false}).limit(100);
+  const {data,error}=await api.from("iphone_leads").select("id,full_name,phone,model_interest,status,assigned_to,created_at").order("created_at",{ascending:false}).limit(100);
   if(error){say("leadCount","Erro: "+error.message,true);return;}
   say("leadCount",String(data.length)+" lead(s) • exibindo até 100");
   const body=$("leadRows");body.replaceChildren();
@@ -137,7 +137,7 @@ async function loadLeads(){
     const cell=document.createElement("td"),sel=document.createElement("select");
     statuses.forEach(s=>{let o=el("option",s);o.value=s;sel.append(o);});sel.value=l.status;
     sel.addEventListener("change",async()=>{
-      sel.disabled=true;const {error}=await api.from("leads").update({status:sel.value}).eq("id",l.id);
+      sel.disabled=true;const {error}=await api.from("iphone_leads").update({status:sel.value}).eq("id",l.id);
       sel.disabled=false;if(error){alert("Não foi possível alterar: "+error.message);await loadLeads();}
     });
     cell.append(sel);tr.append(cell);body.append(tr);
@@ -158,7 +158,7 @@ async function createLead(event){
     assigned_to:profile.role==="admin"?($("leadOwner").value||null):profile.id,
     created_by:user.id,origin:"manual"
   };
-  const {error}=await api.from("leads").insert(lead);
+  const {error}=await api.from("iphone_leads").insert(lead);
   button.disabled=false;
   if(error){say("leadStatus","Erro ao salvar: "+error.message,true);return;}
   say("leadStatus","Lead salvo no Supabase.");$("leadForm").reset();$("leadOwner").value=profile.id;await loadLeads();
